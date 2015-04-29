@@ -19,6 +19,7 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
+import com.android.volley.toolbox.ImageRequest;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.NetworkImageView;
 import com.android.volley.toolbox.Volley;
@@ -55,6 +56,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     private RequestQueue requestQueue;
     private ImageLoader imageLoader;
     private long t;
+    private long t2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,10 +101,10 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     private void loadInstagram(String link) {
         t = System.currentTimeMillis();
         current_anchor = Instagram.getAnchor(link);
-        NetworkListenerVolley responseListener = new NetworkListenerVolley();
+        NetworkListenerVolleyForJson responseListener = new NetworkListenerVolleyForJson();
         JsonArrayRequest jar = new JsonArrayRequest(Instagram.BASE_URL+current_anchor, responseListener, responseListener);
         requestQueue.add(jar);
-        Instagram.toast(getApplicationContext(), "Loading image");
+        Instagram.toast(getApplicationContext(), "Loading media");
 
     }
 
@@ -135,7 +137,6 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
-
         switch (v.getId()) {
             case R.id.button:
                 String link = search_tv_btn.getText().toString();
@@ -154,8 +155,22 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         }
     }
 
+    class NetworkListenerVolleyForBitmap implements Response.ErrorListener, Response.Listener<Bitmap> {
 
-    class NetworkListenerVolley implements Response.ErrorListener, Response.Listener<JSONArray> {
+        @Override
+        public void onErrorResponse(VolleyError error) {
+            Instagram.logger("Failed to load bitmap : "+ error.getLocalizedMessage());
+        }
+
+        @Override
+        public void onResponse(Bitmap response) {
+            imgView.setImageBitmap(response);
+            current_image_bitmap = response;
+            Instagram.toast(getApplicationContext(), "Loaded in : "+(System.currentTimeMillis() - t2));
+        }
+    }
+
+    class NetworkListenerVolleyForJson implements Response.ErrorListener, Response.Listener<JSONArray> {
 
         @Override
         public void onErrorResponse(VolleyError error) {
@@ -190,14 +205,10 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
 
     private void loadVideo(JSONArray array) {
         try {
-            String img_url = array.getString(0);
-            imgView.setDefaultImageResId(R.drawable.loading);
-            imgView.setImageUrl(img_url, imageLoader);
-
             String video_url = array.getString(1);
-            current_d_file = new File(FOLDER_PATH+"vid_"+current_anchor+".mp4");
             media_type = MEDIA_TYPE_VIDEO;
             save_btn.setVisibility(View.VISIBLE);
+            save_btn.setText("SAVE VIDEO");
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -206,14 +217,15 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
 
     private void loadImage(JSONArray array) {
         try {
+            t2 = System.currentTimeMillis();
             String img_url = array.getString(0);
-            imgView.setDefaultImageResId(R.drawable.loading);
-            imgView.setImageUrl(img_url, imageLoader);
-            Instagram.toast(getApplicationContext(), "Loaded in : "+(System.currentTimeMillis() - t));
-            current_image_bitmap = ((BitmapDrawable)imgView.getDrawable()).getBitmap();
-            current_d_file = new File(FOLDER_PATH+"img_"+current_anchor+".jpg");
+            NetworkListenerVolleyForBitmap nvl = new NetworkListenerVolleyForBitmap();
+            ImageRequest ir = new ImageRequest(img_url, nvl, 0,0, null, nvl);
+            requestQueue.add(ir);
+
             media_type = MEDIA_TYPE_IMAGE;
             save_btn.setVisibility(View.VISIBLE);
+            save_btn.setText("SAVE PICTURE");
 
         } catch (JSONException e) {
             e.printStackTrace();
@@ -223,10 +235,14 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     private void saveMedia() {
         switch (this.media_type) {
             case MEDIA_TYPE_IMAGE :
+                current_d_file = new File(FOLDER_PATH+"img_"+current_anchor+".jpg");
+                Instagram.toast(getApplicationContext(),
+                        "The picture has been saved to :\n"+current_d_file.getAbsolutePath());
                 Instagram.saveImage(current_image_bitmap, current_d_file);
                 break;
 
             case MEDIA_TYPE_VIDEO:
+                current_d_file = new File(FOLDER_PATH+"vid_"+current_anchor+".mp4");
                 new LazyDownloader().execute(current_video_url);
                 break;
 
@@ -292,6 +308,8 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         @Override
         protected void onPostExecute(Integer integer) {
             save_btn.setVisibility(View.GONE);
+            registerFileToMediaDb(current_d_file);
+            Instagram.logger("Done downloading the video");
 
         }
 
