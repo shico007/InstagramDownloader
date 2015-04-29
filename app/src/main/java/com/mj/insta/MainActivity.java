@@ -58,6 +58,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     private ImageLoader imageLoader;
     private long t;
     private long t2;
+    private boolean readyToDownload = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -140,15 +141,18 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.button:
-                String link = search_tv_btn.getText().toString();
-                if (!link.isEmpty())
-                    loadInstagram(link);
-                else
-                    Instagram.toast(this, "You should provide the shareable link");
-                break;
+                if(!readyToDownload) {
+                    //if everything is ready for download...
+                    String link = search_tv_btn.getText().toString();
+                    if (!link.isEmpty())
+                        loadInstagram(link);
+                    else
+                        Instagram.toast(this, "You should provide the shareable link");
 
-            case R.id.button2:
-                saveMedia();
+                }
+                if(readyToDownload)
+                    saveMedia();
+
                 break;
 
             default:
@@ -168,9 +172,10 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
             imgView.setImageBitmap(response);
             current_image_bitmap = response;
             Instagram.toast(getApplicationContext(), "Loaded in : "+(System.currentTimeMillis() - t2));
-            save_btn.setVisibility(View.VISIBLE);
-            save_btn.setText("SAVE PICTURE");
+            search_tv_btn.setText("SAVE PICTURE");
             media_type = MEDIA_TYPE_IMAGE;
+            readyToDownload = true;
+
         }
     }
 
@@ -211,8 +216,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         try {
             String video_url = array.getString(1);
             media_type = MEDIA_TYPE_VIDEO;
-            save_btn.setVisibility(View.VISIBLE);
-            save_btn.setText("SAVE VIDEO");
+            readyToDownload = true;
 
         } catch (JSONException e) {
             Instagram.logger("Failed to get url from json array");
@@ -241,11 +245,13 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
                 Instagram.toast(getApplicationContext(),
                         "The picture has been saved to :\n"+current_d_file.getAbsolutePath());
                 Instagram.saveImage(current_image_bitmap, current_d_file);
+                readyToDownload = false;
                 break;
 
             case MEDIA_TYPE_VIDEO:
                 current_d_file = new File(FOLDER_PATH+"vid_"+current_anchor+".mp4");
                 new LazyDownloader().execute(current_video_url);
+                readyToDownload = false;
                 break;
 
             default:
