@@ -12,6 +12,7 @@ import android.os.Environment;
 import android.support.v7.app.ActionBarActivity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -45,7 +46,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     private TextView search_tv_btn;
     private TextView tv;
     private Button save_btn;
-    private NetworkImageView imgView;
+    private ImageView imgView;
 
     //variables
     private String current_video_url, current_anchor;
@@ -68,7 +69,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
 
         search_tv_btn = (TextView) findViewById(R.id.button);
         save_btn = (Button) findViewById(R.id.button2);
-        imgView = (NetworkImageView) findViewById(R.id.imageView);
+        imgView = (ImageView) findViewById(R.id.imageView);
         pb = (ProgressBar) findViewById(R.id.progressBar);
 
 
@@ -167,6 +168,9 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
             imgView.setImageBitmap(response);
             current_image_bitmap = response;
             Instagram.toast(getApplicationContext(), "Loaded in : "+(System.currentTimeMillis() - t2));
+            save_btn.setVisibility(View.VISIBLE);
+            save_btn.setText("SAVE PICTURE");
+            media_type = MEDIA_TYPE_IMAGE;
         }
     }
 
@@ -211,6 +215,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
             save_btn.setText("SAVE VIDEO");
 
         } catch (JSONException e) {
+            Instagram.logger("Failed to get url from json array");
             e.printStackTrace();
         }
     }
@@ -223,11 +228,8 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
             ImageRequest ir = new ImageRequest(img_url, nvl, 0,0, null, nvl);
             requestQueue.add(ir);
 
-            media_type = MEDIA_TYPE_IMAGE;
-            save_btn.setVisibility(View.VISIBLE);
-            save_btn.setText("SAVE PICTURE");
-
         } catch (JSONException e) {
+            Instagram.logger("Failed to get url from json array");
             e.printStackTrace();
         }
     }
