@@ -141,7 +141,8 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.button:
-                if(!readyToDownload) {
+                if(!readyToDownload)
+                {
                     //if everything is ready for download...
                     String link = search_tv_btn.getText().toString();
                     if (!link.isEmpty())
@@ -150,7 +151,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
                         Instagram.toast(this, "You should provide the shareable link");
 
                 }
-                if(readyToDownload)
+                else
                     saveMedia();
 
                 break;
@@ -172,8 +173,6 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
             imgView.setImageBitmap(response);
             current_image_bitmap = response;
             Instagram.toast(getApplicationContext(), "Loaded in : "+(System.currentTimeMillis() - t2));
-            search_tv_btn.setText("SAVE PICTURE");
-            media_type = MEDIA_TYPE_IMAGE;
             readyToDownload = true;
 
         }
@@ -198,10 +197,14 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
             case 2:
                 loadImage(array);
                 loadVideo(array);
+                search_tv_btn.setText("SAVE VIDEO");
+                media_type = MEDIA_TYPE_VIDEO;
                 break;
 
             case 1:
                 loadImage(array);
+                search_tv_btn.setText("SAVE PICTURE");
+                media_type = MEDIA_TYPE_IMAGE;
                 break;
 
             case 0:
@@ -215,7 +218,6 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     private void loadVideo(JSONArray array) {
         try {
             String video_url = array.getString(1);
-            media_type = MEDIA_TYPE_VIDEO;
             readyToDownload = true;
 
         } catch (JSONException e) {
@@ -245,11 +247,13 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
                 Instagram.toast(getApplicationContext(),
                         "The picture has been saved to :\n"+current_d_file.getAbsolutePath());
                 Instagram.saveImage(current_image_bitmap, current_d_file);
+                registerFileToMediaDb(current_d_file);
                 readyToDownload = false;
                 break;
 
             case MEDIA_TYPE_VIDEO:
                 current_d_file = new File(FOLDER_PATH+"vid_"+current_anchor+".mp4");
+                Instagram.toast(getApplicationContext(),"Started to download video");
                 new LazyDownloader().execute(current_video_url);
                 readyToDownload = false;
                 break;
