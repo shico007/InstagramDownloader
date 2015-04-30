@@ -224,6 +224,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     private void loadVideo(JSONArray array) {
         try {
             String video_url = array.getString(1);
+            current_video_url = video_url;
 
         } catch (JSONException e) {
             Instagram.logger("Failed to get url from json array");
@@ -290,18 +291,18 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         @Override
         protected void onProgressUpdate(Integer... values) {
             super.onProgressUpdate(values);
-            pb.setProgress(100*values[0]/file_length);
+            //pb.setProgress(100*values[0]/file_length);
         }
 
         @Override
         protected Integer doInBackground(String... params) {
 
             try {
-                URL url =  new URL(params[0]);
+                URL url =  new URL(current_video_url);
                 URLConnection con = url.openConnection();
 
                 BufferedInputStream in = new BufferedInputStream(con.getInputStream());
-                FileOutputStream  fout = new FileOutputStream(file);
+                FileOutputStream  fout = new FileOutputStream(current_d_file);
 
                 final byte data[] = new byte[1024];
                 int count; int i = 0;
@@ -314,6 +315,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
                 fout.close();
 
             } catch (IOException e) {
+                Instagram.logger("Failed to download video from"+params[0]+"\n"+e.getLocalizedMessage());
                 e.printStackTrace();
             }
 
