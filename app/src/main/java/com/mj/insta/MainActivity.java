@@ -173,6 +173,14 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
             imgView.setImageBitmap(response);
             current_image_bitmap = response;
             Instagram.toast(getApplicationContext(), "Loaded in : "+(System.currentTimeMillis() - t2));
+            //the picture determines what to be written on the button
+            //after it has loaded, there's always a delay be careful...
+            if (media_type == MEDIA_TYPE_IMAGE) {
+                search_tv_btn.setText("SAVE PICTURE");
+            }
+            if (media_type == MEDIA_TYPE_VIDEO) {
+                search_tv_btn.setText("SAVE VIDEO");
+            }
             readyToDownload = true;
 
         }
@@ -197,13 +205,11 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
             case 2:
                 loadImage(array);
                 loadVideo(array);
-                search_tv_btn.setText("SAVE VIDEO");
                 media_type = MEDIA_TYPE_VIDEO;
                 break;
 
             case 1:
                 loadImage(array);
-                search_tv_btn.setText("SAVE PICTURE");
                 media_type = MEDIA_TYPE_IMAGE;
                 break;
 
@@ -218,7 +224,6 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     private void loadVideo(JSONArray array) {
         try {
             String video_url = array.getString(1);
-            readyToDownload = true;
 
         } catch (JSONException e) {
             Instagram.logger("Failed to get url from json array");
@@ -295,7 +300,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
                 URL url =  new URL(params[0]);
                 URLConnection con = url.openConnection();
 
-                BufferedInputStream in = new BufferedInputStream(url.openStream());
+                BufferedInputStream in = new BufferedInputStream(con.getInputStream());
                 FileOutputStream  fout = new FileOutputStream(file);
 
                 final byte data[] = new byte[1024];
