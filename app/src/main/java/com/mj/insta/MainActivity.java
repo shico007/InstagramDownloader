@@ -289,8 +289,9 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         @Override
         protected void onProgressUpdate(Long... values) {
             super.onProgressUpdate(values);
-            int progress = (int)(values[0]/(float)file_length)*100;
-            Instagram.logger("Progress : " + progress + " was : "+(values[0]/(float)file_length)*1024);
+            int progress = (int)(1024*100*values[0]/file_length);
+            progress %= 100; //preventing exceeding 100..
+            Instagram.logger("Progress : " + progress + " value : "+values[0]+" progress : "+progress);
             pb.setProgress(progress);
             percentTv.setText(String.valueOf(progress) + "%");
         }
@@ -316,7 +317,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
                 int count; long progress = 0;
                 while ((count = in.read(data, 0, 1024)) != -1) {
                     fout.write(data, 0, count);
-                    publishProgress(progress+=1024);
+                    publishProgress(progress++);
                 }
 
                 in.close();
@@ -326,8 +327,6 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
                 Instagram.logger("Failed to download video from"+params[0]+"\n"+e.getLocalizedMessage());
                 e.printStackTrace();
             }
-
-
             return  0L;
 
         }
@@ -335,7 +334,10 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         @Override
         protected void onPostExecute(Long integer) {
             registerFileToMediaDb(current_d_file);
+            pb.setVisibility(View.GONE);
+            percentTv.setVisibility(View.GONE);
             Instagram.logger("Done downloading the video");
+            Instagram.toast(getApplicationContext(), "Video saved to : "+current_d_file.getAbsolutePath());
 
         }
 
