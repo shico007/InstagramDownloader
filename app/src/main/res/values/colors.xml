@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="url_bg">#df5352ff</color>
+    <color name="view_background">#e8ecfa</color>
+    <color name="btn_bg">#277bec</color>
+    <color name="txt_font">#ff5d4772</color>
+    <color name="action_bar">#1f2649</color>
+</resources>

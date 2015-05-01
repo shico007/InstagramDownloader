@@ -2,7 +2,7 @@
     android:shape="rectangle" >
 
 
-    <solid android:color="#ff5352ff" />
+    <solid android:color="@color/url_bg" />
 
 
     <padding

@@ -20,10 +20,16 @@
     <ProgressBar
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="20dp"
         android:id="@+id/progressBar"
-        android:visibility="gone"
-        android:background="#02fc21a6"/>
+        android:visibility="gone"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="20dp"
+        android:layout_gravity="center_horizontal"
+        android:id="@+id/percent_tv"
+        android:visibility="gone"/>
 
 
 

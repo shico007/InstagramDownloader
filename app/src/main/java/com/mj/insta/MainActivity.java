@@ -4,6 +4,7 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -43,9 +44,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     private static final String FOLDER_PATH = Environment.getExternalStorageDirectory().
             getAbsolutePath()+"/InstaDownloads/";
     //views
-    private TextView search_tv_btn;
-    private TextView tv;
-    private Button save_btn;
+    private TextView search_tv_btn, percentTv;
     private ImageView imgView;
 
     //variables
@@ -55,8 +54,6 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     private int media_type;
     private ProgressBar pb;
     private RequestQueue requestQueue;
-    private ImageLoader imageLoader;
-    private long t;
     private long t2;
     private boolean readyToDownload = false;
 
@@ -68,25 +65,25 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
 
         Instagram.makingFolder(FOLDER_PATH);
 
+
         search_tv_btn = (TextView) findViewById(R.id.button);
-        save_btn = (Button) findViewById(R.id.button2);
+        percentTv = (TextView) findViewById(R.id.percent_tv);
         imgView = (ImageView) findViewById(R.id.imageView);
         pb = (ProgressBar) findViewById(R.id.progressBar);
 
+        getSupportActionBar().setBackgroundDrawable(new ColorDrawable(getResources().getColor(R.color.action_bar)));
 
         search_tv_btn.setOnClickListener(this);
-        save_btn.setOnClickListener(this);
 
 
         String instaLink = getInstaLinkFromClipBoard();
-
         if(instaLink.isEmpty())
             search_tv_btn.setText("No text from clipboard,\nOpen Instagram app and copy share url.");
         else
-            search_tv_btn.setText(instaLink+"\nLOAD URL");
+            search_tv_btn.setText(instaLink+"\nTAP TO LOAD URL");
 
         requestQueue = Volley.newRequestQueue(this);
-        imageLoader = new ImageLoader(requestQueue, new BitmapLruCache());
+        ImageLoader imageLoader = new ImageLoader(requestQueue, new BitmapLruCache());
     }
 
     @Override
@@ -101,7 +98,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     }
 
     private void loadInstagram(String link) {
-        t = System.currentTimeMillis();
+        long t = System.currentTimeMillis();
         current_anchor = Instagram.getAnchor(link);
         NetworkListenerVolleyForJson responseListener = new NetworkListenerVolleyForJson();
         JsonArrayRequest jar = new JsonArrayRequest(Instagram.BASE_URL+current_anchor, responseListener, responseListener);
@@ -145,10 +142,10 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
                 {
                     //if everything is ready for download...
                     String link = search_tv_btn.getText().toString();
-                    if (!link.isEmpty())
+                    if (!link.isEmpty() && Instagram.isInstaLink(link))
                         loadInstagram(link);
                     else
-                        Instagram.toast(this, "You should provide the shareable link");
+                        Instagram.toast(getApplicationContext(), "You should provide the shareable link");
 
                 }
                 else
@@ -161,7 +158,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         }
     }
 
-    class NetworkListenerVolleyForBitmap implements Response.ErrorListener, Response.Listener<Bitmap> {
+    private class NetworkListenerVolleyForBitmap implements Response.ErrorListener, Response.Listener<Bitmap> {
 
         @Override
         public void onErrorResponse(VolleyError error) {
@@ -186,7 +183,7 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         }
     }
 
-    class NetworkListenerVolleyForJson implements Response.ErrorListener, Response.Listener<JSONArray> {
+    private class NetworkListenerVolleyForJson implements Response.ErrorListener, Response.Listener<JSONArray> {
 
         @Override
         public void onErrorResponse(VolleyError error) {
@@ -271,17 +268,18 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
     }
 
 
-    class LazyDownloader extends AsyncTask<String, Integer, Integer> {
+    class LazyDownloader extends AsyncTask<String, Long, Long> {
 
-        String type, extension;
-        File file;
-        private long t1, t2;
+        private long t1, t2, t_getSize;
         private int file_length;
 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
             t1 = System.currentTimeMillis();
+            pb.setVisibility(View.VISIBLE);
+            percentTv.setVisibility(View.VISIBLE);
+            percentTv.setText("0%");
             pb.setMax(100);
             pb.setProgress(0);
             Instagram.logger("Downloading video...");
@@ -289,26 +287,36 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
         }
 
         @Override
-        protected void onProgressUpdate(Integer... values) {
+        protected void onProgressUpdate(Long... values) {
             super.onProgressUpdate(values);
-            //pb.setProgress(100*values[0]/file_length);
+            int progress = (int)(values[0]/(float)file_length)*100;
+            Instagram.logger("Progress : " + progress + " was : "+(values[0]/(float)file_length)*1024);
+            pb.setProgress(progress);
+            percentTv.setText(String.valueOf(progress) + "%");
         }
 
         @Override
-        protected Integer doInBackground(String... params) {
+        protected Long doInBackground(String... params) {
 
             try {
                 URL url =  new URL(current_video_url);
                 URLConnection con = url.openConnection();
 
+                t_getSize = System.currentTimeMillis();
+                file_length = con.getContentLength();
+                file_length = (file_length > 0) ? file_length : 2048;
+                t_getSize = System.currentTimeMillis() - t_getSize;
+                Instagram.logger("Got file size in :"+t_getSize+"ms" + "size : "+file_length);
+
+
                 BufferedInputStream in = new BufferedInputStream(con.getInputStream());
                 FileOutputStream  fout = new FileOutputStream(current_d_file);
 
                 final byte data[] = new byte[1024];
-                int count; int i = 0;
+                int count; long progress = 0;
                 while ((count = in.read(data, 0, 1024)) != -1) {
                     fout.write(data, 0, count);
-                    publishProgress(i++);
+                    publishProgress(progress+=1024);
                 }
 
                 in.close();
@@ -320,13 +328,12 @@ public class MainActivity extends ActionBarActivity implements View.OnClickListe
             }
 
 
-            return  0;
+            return  0L;
 
         }
 
         @Override
-        protected void onPostExecute(Integer integer) {
-            save_btn.setVisibility(View.GONE);
+        protected void onPostExecute(Long integer) {
             registerFileToMediaDb(current_d_file);
             Instagram.logger("Done downloading the video");
 
