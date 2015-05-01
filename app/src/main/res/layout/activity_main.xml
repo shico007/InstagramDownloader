@@ -11,7 +11,6 @@
         android:layout_height="wrap_content"
         android:background="@drawable/search_tv_bg"
         android:id="@+id/button"
-        android:maxLines="5"
         android:textColor="#ffffff"
         android:singleLine="false"
         android:layout_gravity="center_horizontal"
@@ -23,8 +22,9 @@
         android:layout_height="20dp"
         android:id="@+id/progressBar"
         android:progressDrawable="@drawable/progress_drawable"
-        android:layout_marginTop="2dp"
+        android:layout_marginTop="4dp"
         android:visibility="gone"/>
+
 
     <TextView
         android:layout_width="wrap_content"
@@ -34,22 +34,15 @@
         android:visibility="gone"/>
 
 
-
     <ImageView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="200dp"
+        android:background="@color/action_bar"
         android:layout_gravity="center_horizontal"
         android:id="@+id/imageView"
-        android:layout_margin="2dp"
         android:layout_marginTop="4dp"
 
         />
-
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        android:id="@+id/button2" />
 
 
 </LinearLayout>

@@ -3,27 +3,27 @@
     <!-- Define the background properties like color etc -->
     <item android:id="@android:id/background">
         <shape>
-            <gradient
-                android:startColor="#ffd5e6ff"
-                android:centerColor="#ff47abff"
-                android:centerY="1.0"
-                android:endColor="#ffbad2f2"
-                android:angle="270"
-                />
+            <stroke android:color="@color/url_bg" android:width="1dp"/>
+            <solid android:color="#ffffff"/>
+
         </shape>
     </item>
 
     <!-- Define the progress properties like start color, end color etc -->
     <item android:id="@android:id/progress">
         <clip>
+
             <shape>
-                <gradient
-                    android:startColor="#ff2216ff"
-                    android:centerColor="#ff285cd3"
-                    android:centerY="1.0"
-                    android:endColor="#ff121585"
-                    android:angle="270"
+
+                <padding
+                    android:bottom="@dimen/progress_padding"
+                    android:left="@dimen/progress_padding"
+                    android:right="@dimen/progress_padding"
+                    android:top="@dimen/progress_padding"
                     />
+
+                <solid android:color="@color/url_bg"/>
+
             </shape>
         </clip>
     </item>
